@@ -3,7 +3,8 @@ from treys import Deck
 
 
 class Table:
-    def __init__(self, players, small_blind=10, big_blind=20):
+    def __init__(self, players, small_blind=25, big_blind=50):
+        # Players who are still in the round
         self.players = players
         self.pot = 0
         self.highest_bet = 0
@@ -20,10 +21,12 @@ class Table:
         self.highest_bet = self.big_blind
         self.last_raise = self.big_blind
         for player in self.players:
-            player.bet = 0
-            player.has_called = False
-            player.cards = None
+            player.reset()
 
     def distribute_cards(self):
         for player in self.players:
             player.cards = self.deck.draw(2)
+
+    def reset_calls(self):
+        for player in self.players:
+            player.has_called = False

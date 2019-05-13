@@ -25,7 +25,7 @@ steps:
     python -m pip install --upgrade pip
     curl -sSL https://raw.githubusercontent.com/sdispater/poetry/master/get-poetry.py | python
     PATH=$PATH:$HOME/.poetry/env
-    echo "$PATH"
+    source $HOME/.poetry/env
     poetry install
   displayName: 'Install dependencies'
 

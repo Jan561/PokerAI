@@ -30,6 +30,7 @@ steps:
   displayName: 'Install dependencies'
 
 - script: |
+    source $HOME/.poetry/env
     poetry add pytest pytest-azurepipelines
     pytest
   displayName: 'pytest'

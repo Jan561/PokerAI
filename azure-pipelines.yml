@@ -10,10 +10,6 @@ pool:
   vmImage: 'ubuntu-latest'
 strategy:
   matrix:
-    Python27:
-      python.version: '2.7'
-    Python35:
-      python.version: '3.5'
     Python36:
       python.version: '3.6'
     Python37:
@@ -28,7 +24,7 @@ steps:
 - script: |
     python -m pip install --upgrade pip
     curl -sSL https://raw.githubusercontent.com/sdispater/poetry/master/get-poetry.py | python
-    source $HOME/.poetry/env
+    PATH=$PATH:$HOME/.poetry/env
     poetry install
   displayName: 'Install dependencies'
 

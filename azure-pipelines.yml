@@ -28,6 +28,7 @@ steps:
 - script: |
     python -m pip install --upgrade pip
     curl -sSL https://raw.githubusercontent.com/sdispater/poetry/master/get-poetry.py | python
+    source $HOME/.poetry/env
     poetry install
   displayName: 'Install dependencies'
 

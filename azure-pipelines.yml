@@ -32,5 +32,5 @@ steps:
 - script: |
     source $HOME/.poetry/env
     poetry add pytest pytest-azurepipelines
-    python -m pytest
+    poetry run pytest
   displayName: 'pytest'

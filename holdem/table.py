@@ -9,9 +9,11 @@ evaluator = Evaluator()
 class Table:
     def __init__(self, small_blind=25, big_blind=50):
         if small_blind < 0:
-            raise Exception()
+            raise Exception("Small blind must be at least 0")
         if big_blind < 0:
-            raise Exception()
+            raise Exception("Big blind must be at least 0")
+        if big_blind < small_blind:
+            raise Exception("Big blind cant be less than small blind")
         self.players = []
         self.active_players = []
         self.small_blind = small_blind

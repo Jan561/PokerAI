@@ -25,15 +25,19 @@ class Player:
 
         if delta < 0:
             raise Exception("Raise amount is smaller than to_call amount, consider calling instead")
+        
+        if amount > self.stakes:
+            raise Exception("Cant bet more than he has got")
 
         # NOT ALL IN
         if amount < self.stakes:
             if delta < self.table.last_bet_raise_delta:
                 raise Exception("Delta amount of bet/raise must be at least the last delta amount")
             self.table.last_bet_raise = delta
-        # ALL IN
+        # ALL IN --> self.stakes == amount
         else:
-            pass
+            if delta > self.table.last_bet_raise_delta:
+                self.table.last_bet_raise_delta = delta
 
         self.table._reset_players_called_var()
         self._bet(amount)
@@ -60,10 +64,20 @@ class Player:
         return self.stakes == 0
     
     def bet_small_blind(self):
-        self._bet(self.table.small_blind)
+        amount = 0
+        if self.table.small_blind <= self.stakes:
+            amount = self.table.small_blind     
+        else:
+            amount = self.stakes
+        self._bet(amount)
 
     def bet_big_blind(self):
-        self._bet(self.table.big_blind)
+        amount = 0
+        if self.table.big_blind <= self.stakes:
+            amount = self.table.big_blind     
+        else:
+            amount = self.stakes
+        self._bet(amount)
     
     def has_called(self):
         return _has_called or self.is_all_in()

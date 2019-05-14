@@ -7,6 +7,8 @@ class Player:
         self.hand = None
 
     def call_check(self):
+        if self.has_called():
+            raise Exception("This Player has already called")
         highest_bet = self.table.current_pot().highest_bet
         delta = highest_bet - self.bet
         self._bet(delta)
@@ -14,15 +16,28 @@ class Player:
         self.table.set_next_player()
 
     def raise_bet(self, amount):
+        if self.has_called():
+            raise Exception("This Player has already called")
+
         highest_bet = self.table.current_pot().highest_bet
         to_call = highest_bet - self.bet
         delta = amount - to_call
-        if delta < self.table.last_bet_raise_delta:
-            raise Exception("Delta amount of bet/raise must be at least the last delta amount")
-        self._bet(amount)
+
+        if delta < 0:
+            raise Exception("Raise amount is smaller than to_call amount, consider calling instead")
+
+        # NOT ALL IN
+        if amount < self.stakes:
+            if delta < self.table.last_bet_raise_delta:
+                raise Exception("Delta amount of bet/raise must be at least the last delta amount")
+            self.table.last_bet_raise = delta
+        # ALL IN
+        else:
+            pass
+
         self.table._reset_players_called_var()
+        self._bet(amount)
         self._has_called = True
-        self.table.last_bet_raise = delta
         self.table.set_next_player()
 
     def fold(self):
@@ -34,7 +49,9 @@ class Player:
 
     def _bet(self, amount):
         if amount > self.stakes:
-            amount = self.stakes
+            raise Exception("Can't bet more than he has got")
+        if amount < 0:
+            raise Exception("Can't bet less than 0")
         self.bet += amount
         self.stakes -= amount
         self.table.increase_stakes(amount, self)

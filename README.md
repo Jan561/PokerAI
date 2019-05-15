@@ -1,6 +1,6 @@
 # PokerAI
 
-[![ci-badge][]][ci]
+[![ci-badge]][ci]
 
 Attempt to realize a self learning Poker-AI for Texas Hold'em based on QLearning. For the environment we use OpenAI's Gym.
 It's a Work-In-Progress.

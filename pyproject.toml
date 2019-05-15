@@ -2,7 +2,7 @@
 name = "pokerai"
 version = "0.1.0"
 description = ""
-authors = ["Jan Adä <jan.adae@outlook.de>", "Henrik Böving <hargonix@gmail.com>"]
+authors = ["Jan Adä", "Henrik Böving"]
 license = "MIT"
 
 [tool.poetry.dependencies]

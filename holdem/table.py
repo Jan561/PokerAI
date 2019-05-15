@@ -26,6 +26,7 @@ class Table:
         self.bet_round = BetRound.PREFLOP
         self.board = []
         self.last_bet_raise_delta = big_blind
+        self.next_player_idx = 0
 
     def new_round(self):
         if len(self.players) < 2:
@@ -81,10 +82,10 @@ class Table:
         self.pots.append(side_pot)
 
     def set_next_player(self):
-        self.next_player = self._next_active_seat(self.next_player)
+        self.next_player_idx = self._next_active_seat(self.next_player_idx)
 
     def next_player(self):
-        return active_players[self.next_player]
+        return active_players[self.next_player_idx]
 
     def start_next_bet_round(self):
         for p in self.active_players:

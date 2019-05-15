@@ -58,11 +58,26 @@ class Table:
         return self.pots[-1]
 
     def bet(self, amount, player):
-        if player.bet >= self.current_pot().highest_bet:
-            self.current_pot().increase_stakes(amount, player)
-        else:
-            self._split_current_pot(player)
-            self.pots[-2].increase_stakes(amount, player)
+        for pot in self.pots:
+            delta = 0
+            if player not in pot.contributors:
+                delta = pot.highest_amount
+            else:
+                delta = pot.highest_amount - pot.contributors[player]
+
+
+            # All in
+            if amount < delta:
+                # raise Exception("Player can't contribute to pot because his bet is too low")
+                side_pot = self.split_pot(pot, player)
+                pot.increase_stakes(amount, player)
+                return
+
+            amount -= delta
+            pot.increase_stakes(delta, player)
+        
+        self.current_pot().increase_stakes(amount, player)
+        
 
     def _next_seat(self, seat):
         return (seat + 1) % len(self.players)
@@ -76,7 +91,7 @@ class Table:
         old_pot.highest_bet = partial_player.bet
         delta_bet = side_pot.highest_bet - old_pot.highest_bet
         for player in old_pot.contributors:
-            if player.increase_stakes == side_pot.highest_bet:
+            if player.bet == side_pot.highest_bet:
                 side_pot.increase_stakes(delta_bet, player)
                 old_pot.stakes -= delta_bet
         self.pots.append(side_pot)
@@ -166,3 +181,15 @@ class Table:
         for idx, p in enumerate(players):
             if p.stakes == 0:
                 del players[idx]
+
+    def split_pot(self, pot, partial_player):
+        side_pot = Pot(highest_bet=pot.highest_bet)
+        pot.highest_bet = partial_player.bet
+        delta_bet = side_pot.highest_bet - pot.highest_bet
+        for player in pot.contributors:
+            if player.bet == side_pot.highest_bet:
+                side_pot.increase_stakes(delta_bet, player)
+                pot.stakes -= delta_bet
+        self.pots.append(side_pot)
+        self.pots = sorted(self.pots, key=lambda p: p.highest_bet)
+        return side_pot

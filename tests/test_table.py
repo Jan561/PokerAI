@@ -20,6 +20,10 @@ def test_split_current_pot():
     print(str(t.next_player()))
     t.next_player().call_check()
 
+    print("Pots:")
+    for pot in t.pots:
+        print(f"{pot.highest_bet}, {pot.stakes}")
+
     assert len(t.pots) == 2
     assert t.pots[0].highest_bet == 50
     assert t.pots[0].stakes == 200

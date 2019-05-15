@@ -10,8 +10,11 @@ class Player:
         if self.has_called():
             raise Exception("This Player has already called")
         highest_bet = self.table.current_pot().highest_bet
-        delta = highest_bet - self.bet
-        self._bet(delta)
+        amount = highest_bet - self.bet
+        # If player must go All-in to call
+        if amount > self.stakes:
+            amount = self.stakes
+        self._bet(amount)
         self._has_called = True
         self.table.set_next_player()
 

@@ -35,7 +35,7 @@ class Table:
         self.pots = [Pot()]
         self.deck = Deck()
         self.bet_round = BetRound.PREFLOP
-        if len(self.players == 2):
+        if len(self.players) == 2:
             self.small_blind_player = self.dealer
         else:
             self.small_blind_player = self._next_seat(self.dealer)

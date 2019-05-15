@@ -58,7 +58,7 @@ class Player:
             raise Exception("Can't bet less than 0")
         self.bet += amount
         self.stakes -= amount
-        self.table.increase_stakes(amount, self)
+        self.table.bet(amount, self)
 
     def is_all_in(self):
         return self.stakes == 0

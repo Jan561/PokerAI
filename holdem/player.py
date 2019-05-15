@@ -80,4 +80,4 @@ class Player:
         self._bet(amount)
     
     def has_called(self):
-        return _has_called or self.is_all_in()
+        return self._has_called or self.is_all_in()

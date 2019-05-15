@@ -41,7 +41,7 @@ class Table:
         else:
             self.small_blind_player = self._next_seat(self.dealer)
         self.big_blind_player = self._next_seat(self.small_blind_player)
-        self.next_player = self._next_seat(self.big_blind_player)
+        self.next_player_idx = self._next_seat(self.big_blind_player)
         self.board = []
         for player in self.players:
             player._has_called = False

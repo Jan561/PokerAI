@@ -49,3 +49,7 @@ def test_split_current_pot():
     assert len(t2.pots) == 3
     assert t2.pots[0].highest_bet == 25
     assert t2.pots[0].stakes == 100
+    assert t2.pots[1].highest_bet == 50
+    assert t2.pots[1].stakes == 75
+    assert t2.pots[2].highest_bet == 100
+    assert t2.pots[2].stakes == 100

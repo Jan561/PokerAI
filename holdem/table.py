@@ -61,9 +61,9 @@ class Table:
         for pot in self.pots:
             delta = 0
             if player not in pot.contributors:
-                delta = pot.highest_amount
+                delta = pot.highest_amount()
             else:
-                delta = pot.highest_amount - pot.contributors[player]
+                delta = pot.highest_amount() - pot.contributors[player]
 
 
             # All in
@@ -178,18 +178,19 @@ class Table:
                 for p in winners:
                     p.stakes += delta
 
-        for idx, p in enumerate(players):
+        for idx, p in enumerate(self.players):
             if p.stakes == 0:
-                del players[idx]
+                del self.players[idx]
 
     def split_pot(self, pot, partial_player):
         side_pot = Pot(highest_bet=pot.highest_bet)
         pot.highest_bet = partial_player.bet
         delta_bet = side_pot.highest_bet - pot.highest_bet
         for player in pot.contributors:
-            if player.bet == side_pot.highest_bet:
-                side_pot.increase_stakes(delta_bet, player)
+            if player.bet >= side_pot.highest_bet:
+                side_pot.increase_stakes(delta_bet, player, False)
                 pot.stakes -= delta_bet
+                pot.contributors[player] -= delta_bet
         self.pots.append(side_pot)
         self.pots = sorted(self.pots, key=lambda p: p.highest_bet)
         return side_pot

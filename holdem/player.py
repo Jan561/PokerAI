@@ -81,3 +81,6 @@ class Player:
     
     def has_called(self):
         return self._has_called or self.is_all_in()
+
+    def __str__(self):
+        return f"{self.bet}, {self.stakes}"

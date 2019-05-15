@@ -9,10 +9,15 @@ def test_split_current_pot():
     t.add_player(Player(50, t))
 
     t.new_round()
+    print(str(t.next_player()))
     t.next_player().call_check()
+    print(str(t.next_player()))
     t.next_player().raise_bet(100)
+    print(str(t.next_player()))
     t.next_player().call_check()
+    print(str(t.next_player()))
     t.next_player().call_check()
+    print(str(t.next_player()))
     t.next_player().call_check()
 
     assert len(t.pots) == 2

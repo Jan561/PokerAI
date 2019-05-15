@@ -27,11 +27,6 @@ steps:
     source $HOME/.poetry/env
     poetry install
   displayName: 'Install dependencies'
-  
-- script: |
-    source $HOME/.poetry/env
-    poetry build
-  displayName: 'Build'
 
 - script: |
     source $HOME/.poetry/env

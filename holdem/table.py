@@ -47,8 +47,8 @@ class Table:
             player.bet = 0
             player.hand = self.deck.draw(2)
         self.last_bet_raise_delta = self.big_blind
-        self.active_players[small_blind_player].bet_small_blind()
-        self.active_players[big_blind_player].bet_big_blind()
+        self.active_players[self.small_blind_player].bet_small_blind()
+        self.active_players[self.big_blind_player].bet_big_blind()
 
     def add_player(self, player):
         self.players.append(player)

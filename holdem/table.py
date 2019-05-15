@@ -85,7 +85,7 @@ class Table:
         self.next_player_idx = self._next_active_seat(self.next_player_idx)
 
     def next_player(self):
-        return active_players[self.next_player_idx]
+        return self.active_players[self.next_player_idx]
 
     def start_next_bet_round(self):
         for p in self.active_players:

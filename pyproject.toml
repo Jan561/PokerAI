@@ -7,7 +7,6 @@ license = "MIT"
 
 [tool.poetry.dependencies]
 python = "^3.6"
-treys = "0.1"
 pokereval-cactus = "^0.1.0"
 
 [tool.poetry.dev-dependencies]

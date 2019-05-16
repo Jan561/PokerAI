@@ -1,9 +1,9 @@
 from pokereval_cactus import Deck
 from pokereval_cactus import Evaluator
 
-from holdem.bet_round import BetRound
-from holdem.pot import Pot
-from holdem.poker_rule_violation_exception import PokerRuleViolationException
+from gym_holdem.holdem.bet_round import BetRound
+from gym_holdem.holdem.pot import Pot
+from gym_holdem.holdem.poker_rule_violation_exception import PokerRuleViolationException
 
 evaluator = Evaluator()
 

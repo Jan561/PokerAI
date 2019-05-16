@@ -1,8 +1,7 @@
-from holdem import Player
-from holdem import Table
-from holdem import PokerRuleViolationException
-from holdem import BetRound
-
+from gym_holdem.holdem import Player
+from gym_holdem.holdem import Table
+from gym_holdem.holdem import PokerRuleViolationException
+from gym_holdem.holdem import BetRound
 
 def test_player_actions():
     t = Table(small_blind=10, big_blind=20)

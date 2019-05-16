@@ -1,4 +1,4 @@
-from holdem.table import Table
+from gym_holdem.holdem.table import Table
 
 
 class Game:

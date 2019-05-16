@@ -1,6 +1,6 @@
-from holdem import Table
-from holdem import Player
-from holdem import BetRound
+from gym_holdem.holdem import Table
+from gym_holdem.holdem import Player
+from gym_holdem.holdem import BetRound
 
 
 def test_split_pot():

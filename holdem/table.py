@@ -117,12 +117,12 @@ class Table:
             self.reset_players_called_var()
 
         elif self.bet_round == BetRound.FLOP:
-            self.board += self.deck.draw(1)
+            self.board += [self.deck.draw(1)]
             self.bet_round = BetRound.TURN
             self.reset_players_called_var()
 
         elif self.bet_round == BetRound.TURN:
-            self.board += self.deck.draw(1)
+            self.board += [self.deck.draw(1)]
             self.bet_round = BetRound.RIVER
             self.reset_players_called_var()
 
@@ -148,7 +148,7 @@ class Table:
 
     def end_round(self):
         if self.bet_round != BetRound.SHOWDOWN:
-            raise Exception("Round must be in showdown")
+            raise Exception(f"Round must be in showdown but is in {self.bet_round}")
 
         for pot in self.pots:
             eligible_players = [p for p in pot.contributors if p.has_called()]
@@ -173,6 +173,8 @@ class Table:
         for idx, p in enumerate(self.players):
             if p.stakes == 0:
                 del self.players[idx]
+
+        self.bet_round = BetRound.GAME_OVER
 
     def _split_pot(self, pot, partial_player):
         side_pot = Pot(highest_bet=pot.highest_bet)

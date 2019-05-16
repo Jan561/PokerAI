@@ -7,3 +7,4 @@ class BetRound(Enum):
     TURN = 2
     RIVER = 3
     SHOWDOWN = 4
+    GAME_OVER = 5

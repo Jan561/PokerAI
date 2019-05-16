@@ -1,5 +1,6 @@
 from holdem import Table
 from holdem import Player
+from holdem import BetRound
 
 
 def test_split_current_pot():
@@ -46,3 +47,77 @@ def test_split_current_pot():
     assert t2.pots[1].stakes == 75
     assert t2.pots[2].highest_bet == 100
     assert t2.pots[2].stakes == 100
+
+def test_new_bet_round():
+    t = Table(small_blind=10, big_blind=20)
+    for _ in range(4):
+        t.add_player(Player(100, t))
+    
+    t.new_round()
+
+    assert t.bet_round == BetRound.PREFLOP
+    assert t.last_bet_raise_delta == t.big_blind
+    assert len(t.board) == 0
+    for p in t.active_players:
+        assert not p.has_called()
+
+    t.next_player().raise_bet(50)
+    t.next_player().call_check()
+    t.next_player().call_check()
+    t.next_player().call_check()
+    
+    assert t.next_player().has_called()
+    assert t.bet_round == BetRound.PREFLOP
+
+    t.start_next_bet_round()
+
+    assert t.bet_round == BetRound.FLOP
+    assert len(t.board) == 3
+    for p in t.active_players:
+        assert not p.has_called()
+
+    for _ in range(4):
+        t.next_player().call_check()
+    
+    assert t.bet_round == BetRound.FLOP
+    assert t.next_player().has_called()
+
+    # DEBUG
+    print(f"{t.board}")
+    t.start_next_bet_round()
+
+    assert t.bet_round == BetRound.TURN
+    assert len(t.board) == 4
+    for p in t.active_players:
+        assert not p.has_called()
+
+    t.next_player().raise_bet(20)
+    t.next_player().fold()
+    t.next_player().call_check()
+    t.next_player().call_check()
+
+    assert len(t.active_players) == 3
+    assert t.next_player().has_called()
+    assert t.bet_round == BetRound.TURN
+
+    t.start_next_bet_round()
+
+    assert t.bet_round == BetRound.RIVER
+    assert len(t.board) == 5
+    for p in t.active_players:
+        assert not p.has_called()
+
+    for _ in range(3):
+        t.next_player().call_check()
+    
+    assert t.next_player().has_called()
+    assert t.bet_round == BetRound.RIVER
+
+    t.start_next_bet_round()
+
+    assert t.bet_round == BetRound.SHOWDOWN
+    assert len(t.board) == 5
+
+    t.end_round()
+
+    assert t.bet_round == BetRound.GAME_OVER

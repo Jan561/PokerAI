@@ -3,7 +3,7 @@ from holdem import Player
 from holdem import BetRound
 
 
-def test_split_current_pot():
+def test_split_pot():
     # Table 1
     t1 = Table(small_blind=10, big_blind=20)
     t1.add_player(Player(100, t1))

@@ -66,9 +66,7 @@ class Player:
         self._has_called = False
         del self.table.active_players[self.table.next_player_idx]
 
-        # next player gets postition of this player, so we dont need to increase the index. 
-        # if this player had the last seat, the first player becomes next
-        self.table.next_player_idx %= len(self.table.active_players)
+        self.table.set_next_player(folded=True)
 
     def _bet(self, amount):
         if amount > self.stakes:

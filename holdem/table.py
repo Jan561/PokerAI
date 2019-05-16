@@ -1,5 +1,5 @@
-from treys import Deck
-from treys import Evaluator
+from pokereval_cactus import Deck
+from pokereval_cactus import Evaluator
 
 from holdem.bet_round import BetRound
 from holdem.pot import Pot
@@ -89,8 +89,11 @@ class Table:
     def _next_active_seat(self, seat):
         return (seat + 1) % len(self.active_players)
 
-    def set_next_player(self):
-        self.next_player_idx = self._next_active_seat(self.next_player_idx)
+    def set_next_player(self, folded=False):
+        if not folded:
+            self.next_player_idx = self._next_active_seat(self.next_player_idx)
+        else:
+            self.next_player_idx %= len(self.active_players)
 
     def next_player(self):
         return self.active_players[self.next_player_idx]
@@ -117,12 +120,12 @@ class Table:
             self.reset_players_called_var()
 
         elif self.bet_round == BetRound.FLOP:
-            self.board += [self.deck.draw(1)]
+            self.board += self.deck.draw(1)
             self.bet_round = BetRound.TURN
             self.reset_players_called_var()
 
         elif self.bet_round == BetRound.TURN:
-            self.board += [self.deck.draw(1)]
+            self.board += self.deck.draw(1)
             self.bet_round = BetRound.RIVER
             self.reset_players_called_var()
 
@@ -183,7 +186,7 @@ class Table:
 
         for player in pot.contributors:
             if player.bet >= side_pot.highest_bet:
-                side_pot.increase_stakes(delta_bet, player, False)
+                side_pot.increase_stakes(delta_bet, player, auto_set_highest_bet=False)
                 pot.stakes -= delta_bet
                 pot.contributors[player] -= delta_bet
 

@@ -82,8 +82,6 @@ def test_new_bet_round():
     assert t.bet_round == BetRound.FLOP
     assert t.next_player().has_called()
 
-    # DEBUG
-    print(f"{t.board}")
     t.start_next_bet_round()
 
     assert t.bet_round == BetRound.TURN

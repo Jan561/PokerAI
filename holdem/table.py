@@ -3,6 +3,7 @@ from pokereval_cactus import Evaluator
 
 from holdem.bet_round import BetRound
 from holdem.pot import Pot
+from holdem.poker_rule_violation_exception import PokerRuleViolationException
 
 evaluator = Evaluator()
 
@@ -10,11 +11,11 @@ evaluator = Evaluator()
 class Table:
     def __init__(self, small_blind=25, big_blind=50):
         if small_blind < 0:
-            raise Exception("Small blind must be at least 0")
+            raise PokerRuleViolationException("Small blind must be at least 0")
         if big_blind < 0:
-            raise Exception("Big blind must be at least 0")
+            raise PokerRuleViolationException("Big blind must be at least 0")
         if big_blind < small_blind:
-            raise Exception("Big blind cant be less than small blind")
+            raise PokerRuleViolationException("Big blind cant be less than small blind")
 
         self.players = []
         self.active_players = []
@@ -32,7 +33,7 @@ class Table:
 
     def new_round(self):
         if len(self.players) < 2:
-            raise Exception("To start a new round, there must be at least 2 players")
+            raise PokerRuleViolationException("To start a new round, there must be at least 2 players")
 
         self.active_players = self.players
         self.dealer = self._next_seat(self.dealer)
@@ -118,16 +119,19 @@ class Table:
             self.board = self.deck.draw(3)
             self.bet_round = BetRound.FLOP
             self.reset_players_called_var()
+            self.next_player_idx = self._next_active_seat(self.dealer)
 
         elif self.bet_round == BetRound.FLOP:
             self.board += self.deck.draw(1)
             self.bet_round = BetRound.TURN
             self.reset_players_called_var()
+            self.next_player_idx = self._next_active_seat(self.dealer)
 
         elif self.bet_round == BetRound.TURN:
             self.board += self.deck.draw(1)
             self.bet_round = BetRound.RIVER
             self.reset_players_called_var()
+            self.next_player_idx = self._next_active_seat(self.dealer)
 
         elif self.bet_round == BetRound.RIVER:
             self.bet_round = BetRound.SHOWDOWN

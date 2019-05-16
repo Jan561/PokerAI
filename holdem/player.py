@@ -1,4 +1,5 @@
 from holdem.bet_round import BetRound
+from holdem.poker_rule_violation_exception import PokerRuleViolationException
 
 
 class Player:
@@ -10,10 +11,12 @@ class Player:
         self.hand = None
 
     def call_check(self):
+        if self != self.table.next_player():
+            raise PokerRuleViolationException("It's not this players turn")
         if self.has_called():
-            raise Exception("This Player has already called")
+            raise PokerRuleViolationException("This Player has already called")
         if self.table.bet_round == BetRound.SHOWDOWN:
-            raise Exception("Cannot bet in showdown")
+            raise PokerRuleViolationException("Cannot bet in showdown")
 
         highest_bet = self.table.current_pot().highest_bet
         amount = highest_bet - self.bet
@@ -26,25 +29,27 @@ class Player:
         self.table.set_next_player()
 
     def raise_bet(self, amount):
+        if self != self.table.next_player():
+            raise PokerRuleViolationException("It's not this players turn")
         if self.has_called():
-            raise Exception("This Player has already called")
+            raise PokerRuleViolationException("This Player has already called")
         if self.table.bet_round == BetRound.SHOWDOWN:
-            raise Exception("Cannot bet in showdown")
+            raise PokerRuleViolationException("Cannot bet in showdown")
 
         highest_bet = self.table.current_pot().highest_bet
         to_call = highest_bet - self.bet
         delta = amount - to_call
 
         if delta < 0:
-            raise Exception("Raise amount is smaller than to_call amount, consider calling instead")
+            raise PokerRuleViolationException("Raise amount is smaller than to_call amount, consider calling instead")
         
         if amount > self.stakes:
-            raise Exception("Cant bet more than he has got")
+            raise PokerRuleViolationException("Cant bet more than he has got")
 
         # NOT ALL IN
         if amount < self.stakes:
             if delta < self.table.last_bet_raise_delta:
-                raise Exception("Delta amount of bet/raise must be at least the last delta amount")
+                raise PokerRuleViolationException("Delta amount of bet/raise must be at least the last delta amount")
             self.table.last_bet_raise = delta
         # ALL IN --> self.stakes == amount
         else:
@@ -58,10 +63,12 @@ class Player:
         self.table.set_next_player()
 
     def fold(self):
+        if self != self.table.next_player():
+            raise PokerRuleViolationException("It's not this players turn")
         if self.has_called():
-            raise Exception("This Player has already called")
+            raise PokerRuleViolationException("This Player has already called")
         if self.table.bet_round == BetRound.SHOWDOWN:
-            raise Exception("Cannot fold in showdown")
+            raise PokerRuleViolationException("Cannot fold in showdown")
 
         self._has_called = False
         del self.table.active_players[self.table.next_player_idx]
@@ -70,9 +77,9 @@ class Player:
 
     def _bet(self, amount):
         if amount > self.stakes:
-            raise Exception("Can't bet more than he has got")
+            raise PokerRuleViolationException("Can't bet more than he has got")
         if amount < 0:
-            raise Exception("Can't bet less than 0")
+            raise PokerRuleViolationException("Can't bet less than 0")
 
         self.bet += amount
         self.stakes -= amount
@@ -101,4 +108,4 @@ class Player:
         return self._has_called or self.is_all_in()
 
     def __str__(self):
-        return f"{self.bet}, {self.stakes}"
+        return f"bet=={self.bet}, stakes=={self.stakes}"

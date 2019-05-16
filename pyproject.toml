@@ -8,6 +8,7 @@ license = "MIT"
 [tool.poetry.dependencies]
 python = "^3.6"
 pokereval-cactus = "^0.1.0"
+gym = "^0.12.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^4.5"

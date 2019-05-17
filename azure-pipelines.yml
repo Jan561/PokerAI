@@ -35,6 +35,7 @@ steps:
   displayName: 'Pytest'
 
 - script: |
+    source $HOME/.poetry/env
     poetry build
   displayName: 'Build'
   

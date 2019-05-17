@@ -6,36 +6,42 @@
 trigger:
 - master
 
-pool:
-  vmImage: 'ubuntu-latest'
-strategy:
-  matrix:
-    Python36:
-      python.version: '3.6'
-    Python37:
-      python.version: '3.7'
-
-steps:
-- task: UsePythonVersion@0
-  inputs:
-    versionSpec: '$(python.version)'
-  displayName: 'Use Python $(python.version)'
-
-- script: |
-    python -m pip install --upgrade pip
-    curl -sSL https://raw.githubusercontent.com/sdispater/poetry/master/get-poetry.py | python
-    source $HOME/.poetry/env
-    poetry install
-  displayName: 'Install dependencies'
-
-- script: |
-    source $HOME/.poetry/env
-    poetry add pytest pytest-azurepipelines
-    poetry run pytest
-  displayName: 'Pytest'
-
-- script: |
-    source $HOME/.poetry/env
-    poetry build
-  displayName: 'Build'
+jobs:
+- job: "build_linux"
+  pool:
+    vmImage: "ubuntu-latest"
+  strategy:
+    matrix:
+      Python36:
+        python.version: "3.6"
+      Python37:
+        python.version: "3.7"
+    maxParallel: 2
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '$(python.version)'
+      
+  - script: |
+      python -m pip install --upgrade pip
+      curl -sSL https://raw.githubusercontent.com/sdispater/poetry/master/get-poetry.py | python
+      source $HOME/.poetry/env
+      poetry install
+    displayName: 'Install dependencies'
   
+  - script: |
+      source $HOME/.poetry/env
+      poetry add pytest pytest-azurepipelines
+      poetry run pytest
+    displayName: 'Pytest'
+    
+  - script: |
+      source $HOME/.poetry/env
+      poetry build
+    displayName: 'Build'
+    
+  - task: PublishPipelineArtifact@0
+    inputs:
+      artifactName: 'linux_wheel_$(python.version)'
+      targetPath: "dist"
+    displayName: 'build the wheel files'

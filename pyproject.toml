@@ -9,8 +9,6 @@ license = "MIT"
 python = "^3.6"
 pokereval-cactus = "^0.1.0"
 gym = "^0.12.1"
-keras = "^2.2"
-tensorflow = "^1.13"
 
 [tool.poetry.dev-dependencies]
 pytest = "^4.5"

@@ -1,14 +1,14 @@
 import gym
 import numpy as np
 
+from gym.spaces import Box
+
 from gym_holdem.holdem import Table, Player, bet_round_to_str, BetRound
-from gym_holdem.envs.action import Action, Actions
-from gym_holdem.spaces import ActionSpace
 
 from pokereval_cactus import Card
 
-CALL_CHECK = -1
-FOLD = -2
+CALL_CHECK_MOVE = -1
+FOLD_MOVE = -2
 
 
 class HoldemEnv(gym.Env):
@@ -19,17 +19,14 @@ class HoldemEnv(gym.Env):
         self.big_blind = big_blind
         self.stakes = stakes
         self.table = None
+        self.action_space = Box(low=0, high=1, shape=(1,), dtype=np.float32)
 
-    def step(self, action: Action):
+    def step(self, action: np.float32):
         player = self.table.next_player()
-        if action.type == Actions.CALL_CHECK:
-            player.call_check()
-        elif action.type == Actions.RAISE_BET:
-            player.raise_bet(action.amount)
-        elif action.type == Actions.FOLD:
-            player.fold()
-        else:
-            raise NotImplementedError()
+        if action < 0 or action > 1:
+            raise ValueError()
+
+        self._take_action(action, player)
 
         if self.table.next_player().has_called():
             self.table.start_next_bet_round()
@@ -37,7 +34,7 @@ class HoldemEnv(gym.Env):
         if self.table.bet_round == BetRound.SHOWDOWN:
             self.table.end_round()
 
-        return self.table, player.stakes, len(self.table.players) == 0, {}
+        return self.observation_space, player.stakes, len(self.table.players) == 0, {}
 
     def reset(self):
         self.table = Table(small_blind=self.small_blind, big_blind=self.big_blind)
@@ -45,8 +42,10 @@ class HoldemEnv(gym.Env):
             player = Player(self.stakes, self.table)
             self.table.add_player(player)
             player.name = str(idx)
+
         self.table.new_round()
-        return self.table
+
+        return self.observation_space
 
     def render(self, mode="human", close=False):
         for p in self.table.active_players:
@@ -55,20 +54,41 @@ class HoldemEnv(gym.Env):
         print(f"Board: {Card.print_pretty_cards(self.table.board)}")
         print(f"Bet round: {bet_round_to_str(self.table.bet_round)}")
 
+    def get_move_from_action(self, action):
+        valid_moves = self._valid_moves
+        idx = int(len(valid_moves) * action)
+        # For the very rare case that action == 1
+        if idx == len(valid_moves):
+            idx = len(valid_moves) - 1
+
+        return valid_moves[idx]
+
+    def _take_action(self, action, player):
+        move = self.get_move_from_action(action)
+
+        if move == FOLD_MOVE:
+            player.fold()
+        elif move == CALL_CHECK_MOVE:
+            player.call_check()
+        elif move > 0:
+            # move > 0 indicates raise
+            player.raise_bet(move)
+
     @property
-    def action_space(self):
+    def _valid_moves(self):
         player = self.table.next_player()
         to_call = self.table.current_pot().highest_bet - player.bet
         min_bet_amount = to_call + self.table.last_bet_raise_delta
         max_bet_amount = player.stakes
-        actions = [CALL_CHECK, FOLD]
+        moves = [FOLD_MOVE, CALL_CHECK_MOVE]
         if min_bet_amount <= max_bet_amount:
             possible_bet_amounts = range(min_bet_amount, max_bet_amount + 1)
-            actions += possible_bet_amounts
+            moves += possible_bet_amounts
         else:
             if player.stakes > to_call:
-                actions.append(player.stakes)
-        return ActionSpace(actions)
+                moves.append(player.stakes)
+
+        return np.array(moves)
 
     @property
     def observation_space(self):

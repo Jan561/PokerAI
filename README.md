@@ -2,7 +2,7 @@
 
 [![ci-badge]][ci]
 
-Attempt to realize a self learning Poker-AI for Texas Hold'em based on QLearning. For the environment we use OpenAI's Gym.
+OpenAI-Gym environment for Texas Hold'em.
 It's a Work-In-Progress.
 
 [ci-badge]: https://dev.azure.com/pokeraigym/PokerAIGym/_apis/build/status/pokeraigym.gym-holdem?branchName=master

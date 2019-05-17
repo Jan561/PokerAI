@@ -2,7 +2,7 @@
 name = "gym-holdem"
 version = "0.1.0"
 description = ""
-authors = ["Jan Adä", "Henrik Böving"]
+authors = ["Jan Adä"]
 license = "MIT"
 
 [tool.poetry.dependencies]

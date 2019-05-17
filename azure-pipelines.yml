@@ -40,14 +40,8 @@ jobs:
       poetry build
     displayName: 'Build'
     
-  - script: |
-      cd dist
-      mkdir wheels
-      cp *.whl wheels
-    displayName: 'Copy wheel files'
-    
   - task: PublishPipelineArtifact@0
     inputs:
       artifactName: 'linux_wheel_$(python.version)'
-      targetPath: "dist/wheels"
-    displayName: 'build the wheel files'
+      targetPath: "dist"
+    displayName: 'Publish build artifacts'

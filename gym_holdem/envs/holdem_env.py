@@ -21,7 +21,7 @@ class HoldemEnv(gym.Env):
         self.table = None
         self.action_space = Box(low=0, high=1, shape=(1,), dtype=np.float32)
 
-    def step(self, action: np.float32):
+    def step(self, action: int):
         player = self.table.next_player()
         if action < 0 or action > 1:
             raise ValueError()

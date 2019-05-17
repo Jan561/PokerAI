@@ -170,8 +170,9 @@ class Table:
 
             else:
                 ranks = [evaluator.evaluate(p.hand, self.board) for p in eligible_players]
-                highest_rank = max(ranks)
-                winners = [p for idx, p in enumerate(eligible_players) if ranks[idx] == highest_rank]
+                # best rank has lowest value
+                best_rank = min(ranks)
+                winners = [p for idx, p in enumerate(eligible_players) if ranks[idx] == best_rank]
 
                 delta = pot.stakes / len(winners)
                 for p in winners:

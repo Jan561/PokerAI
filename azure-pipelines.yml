@@ -33,3 +33,8 @@ steps:
     poetry add pytest pytest-azurepipelines
     poetry run pytest
   displayName: 'Pytest'
+
+- script: |
+    poetry build
+  displayName: 'Build'
+  

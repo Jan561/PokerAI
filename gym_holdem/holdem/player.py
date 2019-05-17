@@ -1,6 +1,8 @@
 from gym_holdem.holdem.bet_round import BetRound
 from gym_holdem.holdem.poker_rule_violation_exception import PokerRuleViolationException
 
+from pokereval_cactus import Card
+
 
 class Player:
     def __init__(self, stakes, table):
@@ -9,6 +11,7 @@ class Player:
         self.bet = 0
         self._has_called = False
         self.hand = None
+        self.name = None # meant to be overwritten
 
     def call_check(self):
         if self != self.table.next_player():
@@ -108,4 +111,7 @@ class Player:
         return self._has_called or self.is_all_in()
 
     def __str__(self):
-        return f"bet=={self.bet}, stakes=={self.stakes}"
+        if self.name:
+            return f"Player {self.name}: bet=={self.bet}, stakes=={self.stakes}, hand=={Card.pretty_print_cards(self.hand)}"
+        else:
+            return f"Anonymous Player: bet=={self.bet}, stakes=={self.stakes}, hand=={Card.pretty_print_cards(self.hand)}"

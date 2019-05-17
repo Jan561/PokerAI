@@ -48,6 +48,7 @@ def test_split_pot():
     assert t2.pots[2].highest_bet == 100
     assert t2.pots[2].stakes == 100
 
+
 def test_new_bet_round():
     t = Table(small_blind=10, big_blind=20)
     for _ in range(4):
@@ -58,7 +59,7 @@ def test_new_bet_round():
     assert t.bet_round == BetRound.PREFLOP
     assert t.last_bet_raise_delta == t.big_blind
     assert len(t.board) == 0
-    assert t.next_player_idx == t._next_active_seat(t.big_blind_player)
+    assert t.next_player_idx == t.next_active_seat(t.big_blind_player)
     for p in t.active_players:
         assert not p.has_called()
 
@@ -74,7 +75,7 @@ def test_new_bet_round():
 
     assert t.bet_round == BetRound.FLOP
     assert len(t.board) == 3
-    assert t.next_player_idx == t._next_active_seat(t.dealer)
+    assert t.next_player_idx == t.next_active_seat(t.dealer)
     for p in t.active_players:
         assert not p.has_called()
 
@@ -88,7 +89,7 @@ def test_new_bet_round():
 
     assert t.bet_round == BetRound.TURN
     assert len(t.board) == 4
-    assert t.next_player_idx == t._next_active_seat(t.dealer)
+    assert t.next_player_idx == t.next_active_seat(t.dealer)
     for p in t.active_players:
         assert not p.has_called()
 
@@ -105,7 +106,7 @@ def test_new_bet_round():
 
     assert t.bet_round == BetRound.RIVER
     assert len(t.board) == 5
-    assert t.next_player_idx == t._next_active_seat(t.dealer)
+    assert t.next_player_idx == t.next_active_seat(t.dealer)
     for p in t.active_players:
         assert not p.has_called()
 

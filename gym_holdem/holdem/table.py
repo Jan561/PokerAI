@@ -36,7 +36,7 @@ class Table:
             raise PokerRuleViolationException("To start a new round, there must be at least 2 players")
 
         self.active_players = self.players
-        self.dealer = self._next_seat(self.dealer)
+        self.dealer = self.next_seat(self.dealer)
         self.pots = [Pot()]
         self.deck = Deck()
         self.bet_round = BetRound.PREFLOP
@@ -44,10 +44,10 @@ class Table:
         if len(self.players) == 2:
             self.small_blind_player = self.dealer
         else:
-            self.small_blind_player = self._next_seat(self.dealer)
+            self.small_blind_player = self.next_seat(self.dealer)
 
-        self.big_blind_player = self._next_seat(self.small_blind_player)
-        self.next_player_idx = self._next_seat(self.big_blind_player)
+        self.big_blind_player = self.next_seat(self.small_blind_player)
+        self.next_player_idx = self.next_seat(self.big_blind_player)
         self.board = []
 
         for player in self.players:
@@ -68,9 +68,9 @@ class Table:
     def bet(self, amount, player):
         for pot in self.pots:
             if player not in pot.contributors:
-                delta = pot.highest_amount()
+                delta = pot.highest_amount
             else:
-                delta = pot.highest_amount() - pot.contributors[player]
+                delta = pot.highest_amount - pot.contributors[player]
 
             # All in
             if amount < delta:
@@ -84,15 +84,15 @@ class Table:
 
         self.current_pot().increase_stakes(amount, player)
 
-    def _next_seat(self, seat):
+    def next_seat(self, seat):
         return (seat + 1) % len(self.players)
 
-    def _next_active_seat(self, seat):
+    def next_active_seat(self, seat):
         return (seat + 1) % len(self.active_players)
 
     def set_next_player(self, folded=False):
         if not folded:
-            self.next_player_idx = self._next_active_seat(self.next_player_idx)
+            self.next_player_idx = self.next_active_seat(self.next_player_idx)
         else:
             self.next_player_idx %= len(self.active_players)
 
@@ -119,19 +119,19 @@ class Table:
             self.board = self.deck.draw(3)
             self.bet_round = BetRound.FLOP
             self.reset_players_called_var()
-            self.next_player_idx = self._next_active_seat(self.dealer)
+            self.next_player_idx = self.next_active_seat(self.dealer)
 
         elif self.bet_round == BetRound.FLOP:
             self.board += self.deck.draw(1)
             self.bet_round = BetRound.TURN
             self.reset_players_called_var()
-            self.next_player_idx = self._next_active_seat(self.dealer)
+            self.next_player_idx = self.next_active_seat(self.dealer)
 
         elif self.bet_round == BetRound.TURN:
             self.board += self.deck.draw(1)
             self.bet_round = BetRound.RIVER
             self.reset_players_called_var()
-            self.next_player_idx = self._next_active_seat(self.dealer)
+            self.next_player_idx = self.next_active_seat(self.dealer)
 
         elif self.bet_round == BetRound.RIVER:
             self.bet_round = BetRound.SHOWDOWN
@@ -198,3 +198,10 @@ class Table:
         self.pots = sorted(self.pots, key=lambda p: p.highest_bet)
 
         return side_pot
+
+    @property
+    def pot_value(self):
+        stakes = 0
+        for pot in self.pots:
+            stakes += pot.stakes
+        return stakes

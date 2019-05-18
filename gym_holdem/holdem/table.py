@@ -39,6 +39,7 @@ class Table:
         self.dealer = self.next_seat(self.dealer)
         self.pots = [Pot()]
         self.deck = Deck()
+        self.deck.shuffle()
         self.bet_round = BetRound.PREFLOP
 
         if len(self.players) == 2:
@@ -62,6 +63,7 @@ class Table:
     def add_player(self, player):
         self.players.append(player)
 
+    @property
     def current_pot(self):
         return self.pots[-1]
 
@@ -82,7 +84,7 @@ class Table:
             amount -= delta
             pot.increase_stakes(delta, player)
 
-        self.current_pot().increase_stakes(amount, player)
+        self.current_pot.increase_stakes(amount, player)
 
     def next_seat(self, seat):
         return (seat + 1) % len(self.players)
@@ -91,17 +93,25 @@ class Table:
         return (seat + 1) % len(self.active_players)
 
     def set_next_player(self, folded=False):
+        if self.all_players_called:
+            self.next_player_idx = None
+            return
+        
         if not folded:
             self.next_player_idx = self.next_active_seat(self.next_player_idx)
         else:
             self.next_player_idx %= len(self.active_players)
+        
+        while self.next_player.has_called:
+            self.next_player_idx = self.next_active_seat(self.next_player_idx)
 
+    @property
     def next_player(self):
         return self.active_players[self.next_player_idx]
 
     def start_next_bet_round(self):
         for p in self.active_players:
-            if not p.has_called():
+            if not p.has_called:
                 raise Exception("Everyone must call first")
 
         self.last_bet_raise_delta = self.big_blind
@@ -120,18 +130,24 @@ class Table:
             self.bet_round = BetRound.FLOP
             self.reset_players_called_var()
             self.next_player_idx = self.next_active_seat(self.dealer)
+            if self.next_player.has_called:
+                self.set_next_player
 
         elif self.bet_round == BetRound.FLOP:
             self.board += self.deck.draw(1)
             self.bet_round = BetRound.TURN
             self.reset_players_called_var()
             self.next_player_idx = self.next_active_seat(self.dealer)
+            if self.next_player.has_called:
+                self.set_next_player
 
         elif self.bet_round == BetRound.TURN:
             self.board += self.deck.draw(1)
             self.bet_round = BetRound.RIVER
             self.reset_players_called_var()
             self.next_player_idx = self.next_active_seat(self.dealer)
+            if self.next_player.has_called:
+                self.set_next_player
 
         elif self.bet_round == BetRound.RIVER:
             self.bet_round = BetRound.SHOWDOWN
@@ -158,7 +174,7 @@ class Table:
             raise Exception(f"Round must be in showdown but is in {self.bet_round}")
 
         for pot in self.pots:
-            eligible_players = [p for p in pot.contributors if p.has_called()]
+            eligible_players = [p for p in pot.contributors if p.has_called]
 
             if len(eligible_players) == 0:
                 delta = pot.stakes / len(pot.contributors)
@@ -174,7 +190,7 @@ class Table:
                 best_rank = min(ranks)
                 winners = [p for idx, p in enumerate(eligible_players) if ranks[idx] == best_rank]
 
-                delta = pot.stakes / len(winners)
+                delta = int(pot.stakes / len(winners))
                 for p in winners:
                     p.stakes += delta
 
@@ -199,6 +215,13 @@ class Table:
         self.pots = sorted(self.pots, key=lambda p: p.highest_bet)
 
         return side_pot
+
+    @property
+    def all_players_called(self):
+        for p in self.active_players:
+            if not p.has_called:
+                return False
+        return True
 
     @property
     def pot_value(self):

@@ -13,11 +13,11 @@ def test_split_pot():
 
     t1.new_round()
 
-    t1.next_player().call_check()
-    t1.next_player().raise_bet(100)
-    t1.next_player().call_check()
-    t1.next_player().call_check()
-    t1.next_player().call_check()
+    t1.next_player.call_check()
+    t1.next_player.raise_bet(100)
+    t1.next_player.call_check()
+    t1.next_player.call_check()
+    t1.next_player.call_check()
 
     assert len(t1.pots) == 2
     assert t1.pots[0].highest_bet == 50
@@ -34,11 +34,11 @@ def test_split_pot():
 
     t2.new_round()
 
-    t2.next_player().call_check()
-    t2.next_player().raise_bet(100)
-    t2.next_player().call_check()
-    t2.next_player().call_check()
-    t2.next_player().call_check()
+    t2.next_player.call_check()
+    t2.next_player.raise_bet(100)
+    t2.next_player.call_check()
+    t2.next_player.call_check()
+    t2.next_player.call_check()
 
     assert len(t2.pots) == 3
     assert t2.pots[0].highest_bet == 25
@@ -61,14 +61,14 @@ def test_new_bet_round():
     assert len(t.board) == 0
     assert t.next_player_idx == t.next_active_seat(t.big_blind_player)
     for p in t.active_players:
-        assert not p.has_called()
+        assert not p.has_called
 
-    t.next_player().raise_bet(50)
-    t.next_player().call_check()
-    t.next_player().call_check()
-    t.next_player().call_check()
+    t.next_player.raise_bet(50)
+    t.next_player.call_check()
+    t.next_player.call_check()
+    t.next_player.call_check()
     
-    assert t.next_player().has_called()
+    assert t.all_players_called
     assert t.bet_round == BetRound.PREFLOP
 
     t.start_next_bet_round()
@@ -77,13 +77,13 @@ def test_new_bet_round():
     assert len(t.board) == 3
     assert t.next_player_idx == t.next_active_seat(t.dealer)
     for p in t.active_players:
-        assert not p.has_called()
+        assert not p.has_called
 
     for _ in range(4):
-        t.next_player().call_check()
+        t.next_player.call_check()
     
     assert t.bet_round == BetRound.FLOP
-    assert t.next_player().has_called()
+    assert t.all_players_called
 
     t.start_next_bet_round()
 
@@ -91,15 +91,15 @@ def test_new_bet_round():
     assert len(t.board) == 4
     assert t.next_player_idx == t.next_active_seat(t.dealer)
     for p in t.active_players:
-        assert not p.has_called()
+        assert not p.has_called
 
-    t.next_player().raise_bet(20)
-    t.next_player().fold()
-    t.next_player().call_check()
-    t.next_player().call_check()
+    t.next_player.raise_bet(20)
+    t.next_player.fold()
+    t.next_player.call_check()
+    t.next_player.call_check()
 
     assert len(t.active_players) == 3
-    assert t.next_player().has_called()
+    assert t.all_players_called
     assert t.bet_round == BetRound.TURN
 
     t.start_next_bet_round()
@@ -108,12 +108,12 @@ def test_new_bet_round():
     assert len(t.board) == 5
     assert t.next_player_idx == t.next_active_seat(t.dealer)
     for p in t.active_players:
-        assert not p.has_called()
+        assert not p.has_called
 
     for _ in range(3):
-        t.next_player().call_check()
+        t.next_player.call_check()
     
-    assert t.next_player().has_called()
+    assert t.all_players_called
     assert t.bet_round == BetRound.RIVER
 
     t.start_next_bet_round()

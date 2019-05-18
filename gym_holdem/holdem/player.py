@@ -5,24 +5,51 @@ from pokereval_cactus import Card
 
 
 class Player:
-    def __init__(self, stakes, table):
-        self.stakes = stakes
+    def __init__(self, stakes, table=None, name=None):
         self.table = table
+        self.name = name
+
+    def reset(self, stakes=0):
         self.bet = 0
+        self.hand = []
+        self.stakes = stakes
         self._has_called = False
         self.hand = None
-        self.name = None # meant to be overwritten
+
+    def action_from_amount(self, amount):
+        self._check_player_may_act()
+
+        # CHECK || FOLD
+        if amount == 0:
+            if self.to_call_amount == 0:
+                self.call_check()
+            else:
+                self.fold()
+
+            return
+
+        # CALL || RAISE
+        delta = amount - self.to_call_amount
+
+        # IF ALL-IN
+        if amount == self.stakes:
+            if delta <= 0:
+                self.call_check()
+            else:
+                self.raise_bet(amount)
+        else:
+            if delta == 0:
+                self.call_check()
+            elif delta > 0:
+                self.raise_bet(amount)
+            else:
+                raise PokerRuleViolationException(f"Cannot bet less than to call amount: amount=={amount}, to_call=={self.to_call_amount}")
+
 
     def call_check(self):
-        if self != self.table.next_player():
-            raise PokerRuleViolationException("It's not this players turn")
-        if self.has_called():
-            raise PokerRuleViolationException("This Player has already called")
-        if self.table.bet_round == BetRound.SHOWDOWN:
-            raise PokerRuleViolationException("Cannot bet in showdown")
+        self._check_player_may_act()
 
-        highest_bet = self.table.current_pot().highest_bet
-        amount = highest_bet - self.bet
+        amount = self.to_call_amount
         # If player must go All-in to call
         if amount > self.stakes:
             amount = self.stakes
@@ -32,19 +59,12 @@ class Player:
         self.table.set_next_player()
 
     def raise_bet(self, amount):
-        if self != self.table.next_player():
-            raise PokerRuleViolationException("It's not this players turn")
-        if self.has_called():
-            raise PokerRuleViolationException("This Player has already called")
-        if self.table.bet_round == BetRound.SHOWDOWN:
-            raise PokerRuleViolationException("Cannot bet in showdown")
+        self._check_player_may_act()
 
-        highest_bet = self.table.current_pot().highest_bet
-        to_call = highest_bet - self.bet
-        delta = amount - to_call
+        delta = amount - self.to_call_amount
 
-        if delta < 0:
-            raise PokerRuleViolationException("Raise amount is smaller than to_call amount, consider calling instead")
+        if delta <= 0:
+            raise PokerRuleViolationException("Raise amount is smaller than or equal to to_call amount, consider calling instead")
         
         if amount > self.stakes:
             raise PokerRuleViolationException("Cant bet more than he has got")
@@ -52,7 +72,7 @@ class Player:
         # NOT ALL IN
         if amount < self.stakes:
             if delta < self.table.last_bet_raise_delta:
-                raise PokerRuleViolationException("Delta amount of bet/raise must be at least the last delta amount")
+                raise PokerRuleViolationException(f"Delta amount of bet/raise must be at least the last delta amount, delta== {delta}, last_delta=={self.table.last_bet_raise_delta}")
             self.table.last_bet_raise = delta
         # ALL IN --> self.stakes == amount
         else:
@@ -66,12 +86,7 @@ class Player:
         self.table.set_next_player()
 
     def fold(self):
-        if self != self.table.next_player():
-            raise PokerRuleViolationException("It's not this players turn")
-        if self.has_called():
-            raise PokerRuleViolationException("This Player has already called")
-        if self.table.bet_round == BetRound.SHOWDOWN:
-            raise PokerRuleViolationException("Cannot fold in showdown")
+        self._check_player_may_act()
 
         self._has_called = False
         del self.table.active_players[self.table.next_player_idx]
@@ -107,8 +122,24 @@ class Player:
 
         self._bet(amount)
     
+    @property
     def has_called(self):
         return self._has_called or self.is_all_in()
+
+
+    @property
+    def to_call_amount(self):
+        return self.table.current_pot.highest_bet - self.bet
+
+    def _check_player_may_act(self):
+        if self.has_called:
+            raise PokerRuleViolationException("This Player has already called")
+        if self.table.bet_round == BetRound.SHOWDOWN:
+            raise PokerRuleViolationException("Cannot bet in showdown")
+        if self.table.next_player_idx == None:
+            raise PokerRuleViolationException("This betround has already ended")
+        if self != self.table.next_player:
+            raise PokerRuleViolationException("It's not this players turn")
 
     def __str__(self):
         if self.name:

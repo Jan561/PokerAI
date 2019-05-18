@@ -8,6 +8,11 @@ class Player:
     def __init__(self, stakes, table=None, name=None):
         self.table = table
         self.name = name
+        self.bet = 0
+        self.hand = []
+        self.stakes = stakes
+        self._has_called = False
+        self.hand = None
 
     def reset(self, stakes=0):
         self.bet = 0

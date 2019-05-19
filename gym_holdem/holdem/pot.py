@@ -8,8 +8,8 @@ class Pot:
 
     def increase_stakes(self, amount, player, auto_set_highest_bet=True):
         if player.bet < self.highest_bet:
-            raise Exception(f"Player can't contribute to pot because his bet is too low: player-bet=={str(player)}, "
-                            f"pot-bet=={self.highest_bet}")
+            raise Exception(f"Player can't contribute to pot because his bet is too low: player=={str(player)}, "
+                            f"pot-bet=={self.highest_bet}, amount=={amount}, highest_amount=={self.highest_amount}")
 
         if player not in self.contributors:
             self.contributors[player] = amount
@@ -26,3 +26,6 @@ class Pot:
             return 0
         max_key = max(self.contributors, key=self.contributors.get)
         return self.contributors[max_key]
+
+    def __str__(self):
+        return f"stakes=={self.stakes}\n, self.highest_bet=={self.highest_bet}\n, contributors=={self.contributors}\n"

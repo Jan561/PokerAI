@@ -124,3 +124,90 @@ def test_new_bet_round():
     t.end_round()
 
     assert t.bet_round == BetRound.GAME_OVER
+
+
+def test_all_players_have_called():
+    t = Table()
+    for _ in range(4):
+        t.add_player(Player(100, t))
+    t.new_round()
+
+    assert not t.all_players_called
+    t.next_player.call_check()
+    assert not t.all_players_called
+    t.next_player.call_check()
+    assert not t.all_players_called
+    t.next_player.call_check()
+    assert not t.all_players_called
+    t.next_player.call_check()
+    assert t.all_players_called
+    t.start_next_bet_round()
+    assert not t.all_players_called
+
+def play_game_0():
+    t = Table()
+    for _ in range(4):
+        t.add(Player(100, table=t))
+    
+    t.new_round()
+
+    @property
+    def n():
+        return t.next_player
+
+    n.raise_bet(81)
+    n.fold()
+    n.fold()
+    n.fold()
+
+    t.start_next_bet_round()
+    t.end_round()
+    t.new_round()
+
+    n.raise_bet(80)
+    n.fold()
+    n.fold()
+    n.call_check()
+    
+    t.start_next_bet_round()
+    t.end_round()
+    t.new_round()
+
+    n.action_from_amount(n.stakes)
+    n.raise_bet(202)
+    n.action_from_amount(n.stakes)
+
+    t.start_next_bet_round()
+    t.end_round()
+    t.new_round()
+
+    n.raise_bet(209)
+    n.action_from_amount(n.stakes)
+
+    t.start_next_bet_round()
+    t.end_round()
+
+    assert len(t.players) == 1
+
+def play_game_1():
+    t = Table()
+    for _ in range(4):
+        t.add(Player(100, table=t))
+    
+    t.new_round()
+
+    @property
+    def n():
+        return t.next_player
+    
+    n.raise_bet(75)
+    n.raise_bet(100)
+    n.fold()
+    n.call_check()
+    n.action_from_amount(n.stakes)
+
+    t.start_next_bet_round()
+    t.end_round()
+    t.new_round()
+
+

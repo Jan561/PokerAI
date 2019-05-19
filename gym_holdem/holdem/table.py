@@ -26,7 +26,7 @@ class Table:
         self.big_blind_player = -1
         self.pots = []
         self.deck = None
-        self.bet_round = BetRound.PREFLOP
+        self.bet_round = BetRound.GAME_OVER
         self.board = []
         self.last_bet_raise_delta = big_blind
         self.next_player_idx = 0
@@ -34,8 +34,10 @@ class Table:
     def new_round(self):
         if len(self.players) < 2:
             raise PokerRuleViolationException("To start a new round, there must be at least 2 players")
+        if self.bet_round != BetRound.GAME_OVER:
+            raise PokerRuleViolationException("Cant start new round, previous round isn't over yet")
 
-        self.active_players = self.players
+        self.active_players = self.players[:]
         self.dealer = self.next_seat(self.dealer)
         self.pots = [Pot()]
         self.deck = Deck()
@@ -48,7 +50,6 @@ class Table:
             self.small_blind_player = self.next_seat(self.dealer)
 
         self.big_blind_player = self.next_seat(self.small_blind_player)
-        self.next_player_idx = self.next_seat(self.big_blind_player)
         self.board = []
 
         for player in self.players:
@@ -59,6 +60,7 @@ class Table:
         self.last_bet_raise_delta = self.big_blind
         self.active_players[self.small_blind_player].bet_small_blind()
         self.active_players[self.big_blind_player].bet_big_blind()
+        self.set_next_player(from_player_idx=self.big_blind_player)
 
     def add_player(self, player):
         self.players.append(player)
@@ -68,12 +70,16 @@ class Table:
         return self.pots[-1]
 
     def bet(self, amount, player):
+        print("Pots: ", [pot.highest_bet for pot in self.pots])
         for pot in self.pots:
             if player not in pot.contributors:
                 delta = pot.highest_amount
             else:
                 delta = pot.highest_amount - pot.contributors[player]
 
+            if delta == 0:
+                continue
+            
             # All in
             if amount < delta:
                 # raise Exception("Player can't contribute to pot because his bet is too low")
@@ -84,6 +90,9 @@ class Table:
             amount -= delta
             pot.increase_stakes(delta, player)
 
+            if amount == 0:
+                return
+
         self.current_pot.increase_stakes(amount, player)
 
     def next_seat(self, seat):
@@ -92,15 +101,18 @@ class Table:
     def next_active_seat(self, seat):
         return (seat + 1) % len(self.active_players)
 
-    def set_next_player(self, folded=False):
+    def set_next_player(self, from_player_idx=None, folded=False):
         if self.all_players_called:
             self.next_player_idx = None
             return
         
+        if from_player_idx == None:
+            from_player_idx = self.next_player_idx
+        
         if not folded:
-            self.next_player_idx = self.next_active_seat(self.next_player_idx)
+            self.next_player_idx = self.next_active_seat(from_player_idx)
         else:
-            self.next_player_idx %= len(self.active_players)
+            self.next_player_idx = from_player_idx % len(self.active_players)
         
         while self.next_player.has_called:
             self.next_player_idx = self.next_active_seat(self.next_player_idx)
@@ -110,13 +122,12 @@ class Table:
         return self.active_players[self.next_player_idx]
 
     def start_next_bet_round(self):
-        for p in self.active_players:
-            if not p.has_called:
-                raise Exception("Everyone must call first")
+        if not self.all_players_called:
+            raise Exception("Everyone must call first")
 
         self.last_bet_raise_delta = self.big_blind
 
-        if len(self.active_players) == 1:
+        if len(self.active_players) <= 1:
             self.bet_round = BetRound.SHOWDOWN
             return
 
@@ -129,31 +140,25 @@ class Table:
             self.board = self.deck.draw(3)
             self.bet_round = BetRound.FLOP
             self.reset_players_called_var()
-            self.next_player_idx = self.next_active_seat(self.dealer)
-            if self.next_player.has_called:
-                self.set_next_player
+            self.set_next_player(from_player_idx=self.dealer)
 
         elif self.bet_round == BetRound.FLOP:
             self.board += self.deck.draw(1)
             self.bet_round = BetRound.TURN
             self.reset_players_called_var()
-            self.next_player_idx = self.next_active_seat(self.dealer)
-            if self.next_player.has_called:
-                self.set_next_player
+            self.set_next_player(from_player_idx=self.dealer)
 
         elif self.bet_round == BetRound.TURN:
             self.board += self.deck.draw(1)
             self.bet_round = BetRound.RIVER
             self.reset_players_called_var()
-            self.next_player_idx = self.next_active_seat(self.dealer)
-            if self.next_player.has_called:
-                self.set_next_player
+            self.set_next_player(from_player_idx=self.dealer)
 
         elif self.bet_round == BetRound.RIVER:
             self.bet_round = BetRound.SHOWDOWN
 
         elif self.bet_round == BetRound.SHOWDOWN:
-            raise Exception("After the showdown, the round ends")
+            raise PokerRuleViolationException("After the showdown, the round ends")
 
     def reset_players_called_var(self):
         for p in self.active_players:
@@ -162,7 +167,7 @@ class Table:
     def check_everyone_all_in(self):
         only_one_all_in = False
         for p in self.active_players:
-            if not p.is_all_in():
+            if not p.is_all_in:
                 # Checks if there is already one who is not allin
                 if only_one_all_in:
                     return False
@@ -173,32 +178,37 @@ class Table:
         if self.bet_round != BetRound.SHOWDOWN:
             raise Exception(f"Round must be in showdown but is in {self.bet_round}")
 
+        all_winners = []
+
         for pot in self.pots:
             eligible_players = [p for p in pot.contributors if p.has_called]
 
+
             if len(eligible_players) == 0:
-                delta = pot.stakes / len(pot.contributors)
                 for p in pot.contributors:
-                    p.stakes += delta
+                    p.stakes += pot.contributors[p]
+                    all_winners.append([p])
 
             elif len(eligible_players) == 1:
                 eligible_players[0].stakes += pot.stakes
+                all_winners.append([eligible_players[0]])
 
             else:
                 ranks = [evaluator.evaluate(p.hand, self.board) for p in eligible_players]
                 # best rank has lowest value
                 best_rank = min(ranks)
                 winners = [p for idx, p in enumerate(eligible_players) if ranks[idx] == best_rank]
+                all_winners.append(winners)
 
                 delta = int(pot.stakes / len(winners))
                 for p in winners:
                     p.stakes += delta
 
-        for idx, p in enumerate(self.players):
-            if p.stakes == 0:
-                del self.players[idx]
-
+        new_players = [p for p in self.players if p.stakes != 0]
+        self.players = new_players
         self.bet_round = BetRound.GAME_OVER
+
+        return all_winners
 
     def _split_pot(self, pot, partial_player):
         side_pot = Pot(highest_bet=pot.highest_bet)
@@ -229,3 +239,9 @@ class Table:
         for pot in self.pots:
             stakes += pot.stakes
         return stakes
+
+    def __str__(self):
+        return f"""players=={self.players},\n active_players=={self.active_players},\n small_blind=={self.small_blind},\n
+        big_blind=={self.big_blind},\n small_blind_player=={self.small_blind_player},\n big_blind_player=={self.big_blind_player},\n
+        pots=={self.pots},\n deck=={self.deck},\n bet_round=={self.bet_round},\n board=={self.board},\n last_bet_raise_delta=={self.last_bet_raise_delta},\n 
+        next_player_idx=={self.next_player_idx}\n"""

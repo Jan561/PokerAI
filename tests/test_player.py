@@ -91,7 +91,7 @@ def test_player_actions():
         pass
     
     for p in t.active_players:
-        assert p.is_all_in()
+        assert p.is_all_in
 
     t.start_next_bet_round()
     assert t.bet_round == BetRound.SHOWDOWN

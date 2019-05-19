@@ -8,7 +8,12 @@ class Player:
     def __init__(self, stakes, table=None, name=None):
         self.table = table
         self.name = name
-
+        self.bet = 0
+        self.hand = []
+        self.stakes = stakes
+        self._has_called = False
+        self.hand = None
+        
     def reset(self, stakes=0):
         self.bet = 0
         self.hand = []
@@ -90,6 +95,7 @@ class Player:
 
         self._has_called = False
         del self.table.active_players[self.table.next_player_idx]
+        # self.table.active_players.remove(self)
 
         self.table.set_next_player(folded=True)
 
@@ -103,28 +109,35 @@ class Player:
         self.stakes -= amount
         self.table.bet(amount, self)
 
+    @property
     def is_all_in(self):
         return self.stakes == 0
     
     def bet_small_blind(self):
         if self.table.small_blind <= self.stakes:
+            print("SB HEY I AM THE TABLE SMALL BLIND")
             amount = self.table.small_blind     
         else:
+            print("SB HEY I AM THE STAKES")
             amount = self.stakes
 
+        print("sb amount", amount)
         self._bet(amount)
 
     def bet_big_blind(self):
         if self.table.big_blind <= self.stakes:
+            print("BB HEY I AM THE TABLE BIG BLIND")
             amount = self.table.big_blind     
         else:
+            print("BB HEY I AM THE STAKES")
             amount = self.stakes
 
+        print("bb amount", amount)
         self._bet(amount)
     
     @property
     def has_called(self):
-        return self._has_called or self.is_all_in()
+        return self._has_called or self.is_all_in
 
 
     @property
@@ -134,8 +147,8 @@ class Player:
     def _check_player_may_act(self):
         if self.has_called:
             raise PokerRuleViolationException("This Player has already called")
-        if self.table.bet_round == BetRound.SHOWDOWN:
-            raise PokerRuleViolationException("Cannot bet in showdown")
+        if self.table.bet_round == BetRound.SHOWDOWN or self.table.bet_round == BetRound.GAME_OVER:
+            raise PokerRuleViolationException("Cannot bet, round is over")
         if self.table.next_player_idx == None:
             raise PokerRuleViolationException("This betround has already ended")
         if self != self.table.next_player:
@@ -143,6 +156,7 @@ class Player:
 
     def __str__(self):
         if self.name:
-            return f"Player {self.name}: bet=={self.bet}, stakes=={self.stakes}, hand=={Card.pretty_print_cards(self.hand)}"
+            return f"""Player {self.name}: bet=={self.bet}, \nstakes=={self.stakes},\n hand=={Card.print_pretty_cards(self.hand)}, \n
+                    _has_called=={self._has_called}\n"""
         else:
-            return f"Anonymous Player: bet=={self.bet}, stakes=={self.stakes}, hand=={Card.pretty_print_cards(self.hand)}"
+            return f"Anonymous Player: bet=={self.bet}\n, stakes=={self.stakes}\n, hand=={Card.print_pretty_cards(self.hand)}\n"

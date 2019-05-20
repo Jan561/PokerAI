@@ -70,7 +70,8 @@ class Table:
         return self.pots[-1]
 
     def bet(self, amount, player):
-        print("Pots: ", [pot.highest_bet for pot in self.pots])
+        # print("Pots: ", [pot.highest_bet for pot in self.pots])
+        # First call all previous pots
         for pot in self.pots:
             if player not in pot.contributors:
                 delta = pot.highest_amount()
@@ -83,7 +84,7 @@ class Table:
             # All in
             if amount < delta:
                 # raise Exception("Player can't contribute to pot because his bet is too low")
-                self._split_pot(pot, player, amount)
+                self._build_side_pot(pot, player, amount)
                 return
 
             amount -= delta
@@ -92,14 +93,14 @@ class Table:
             if amount == 0:
                 return
 
-        # Raise
+        # Then bet the remainig amount to the current por
         self.current_pot.increase_stakes(amount, player)
         # All in players can't call the raise so we need a new pot where the new stakes go into
         for p in self.current_pot.contributors:
             if p == player:
                 continue
             if p.is_all_in:
-                self._split_pot(self.current_pot, p, 0)
+                self._build_side_pot(self.current_pot, p, 0)
                 break
 
     def next_seat(self, seat):
@@ -210,17 +211,27 @@ class Table:
                 for p in winners:
                     p.stakes += delta
 
+                odd_chips = pot.stakes - delta*len(winners)
+                idx = self.next_seat(self.dealer)
+                while odd_chips > 0:
+                    self.players[idx].stakes += 1
+                    idx = self.next_seat(idx)
+                    odd_chips -= 1
+
         new_players = [p for p in self.players if p.stakes != 0]
         self.players = new_players
         self.bet_round = BetRound.GAME_OVER
 
         return all_winners
 
-    def _split_pot(self, pot, partial_player, partial_player_bet):
+    def _build_side_pot(self, pot, partial_player, partial_player_bet):
         side_pot = Pot(highest_bet=pot.highest_bet)
         pot.highest_bet = partial_player.bet
 
-        new_highest_amount = pot.contributors[partial_player] + partial_player_bet
+        if partial_player in pot.contributors:
+            new_highest_amount = pot.contributors[partial_player] + partial_player_bet
+        else:
+            new_highest_amount = partial_player_bet
 
         for player in pot.contributors:
             if player.bet >= side_pot.highest_bet:

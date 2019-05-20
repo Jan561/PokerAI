@@ -114,24 +114,24 @@ class Player:
     
     def bet_small_blind(self):
         if self.table.small_blind <= self.stakes:
-            print("SB HEY I AM THE TABLE SMALL BLIND")
+            # print("SB HEY I AM THE TABLE SMALL BLIND")
             amount = self.table.small_blind     
         else:
-            print("SB HEY I AM THE STAKES")
+            # print("SB HEY I AM THE STAKES")
             amount = self.stakes
 
-        print("sb amount", amount)
+        # print("sb amount", amount)
         self._bet(amount)
 
     def bet_big_blind(self):
         if self.table.big_blind <= self.stakes:
-            print("BB HEY I AM THE TABLE BIG BLIND")
+            # print("BB HEY I AM THE TABLE BIG BLIND")
             amount = self.table.big_blind     
         else:
-            print("BB HEY I AM THE STAKES")
+            # print("BB HEY I AM THE STAKES")
             amount = self.stakes
 
-        print("bb amount", amount)
+        # print("bb amount", amount)
         self._bet(amount)
     
     @property

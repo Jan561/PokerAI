@@ -73,9 +73,9 @@ class Table:
         print("Pots: ", [pot.highest_bet for pot in self.pots])
         for pot in self.pots:
             if player not in pot.contributors:
-                delta = pot.highest_amount
+                delta = pot.highest_amount()
             else:
-                delta = pot.highest_amount - pot.contributors[player]
+                delta = pot.highest_amount() - pot.contributors[player]
 
             if delta == 0:
                 continue
@@ -83,17 +83,24 @@ class Table:
             # All in
             if amount < delta:
                 # raise Exception("Player can't contribute to pot because his bet is too low")
-                self._split_pot(pot, player)
-                pot.increase_stakes(amount, player)
+                self._split_pot(pot, player, amount)
                 return
 
             amount -= delta
-            pot.increase_stakes(delta, player)
+            pot.increase_stakes(delta, player, auto_set_highest_bet=False)
 
             if amount == 0:
                 return
 
+        # Raise
         self.current_pot.increase_stakes(amount, player)
+        # All in players can't call the raise so we need a new pot where the new stakes go into
+        for p in self.current_pot.contributors:
+            if p == player:
+                continue
+            if p.is_all_in:
+                self._split_pot(self.current_pot, p, 0)
+                break
 
     def next_seat(self, seat):
         return (seat + 1) % len(self.players)
@@ -101,12 +108,12 @@ class Table:
     def next_active_seat(self, seat):
         return (seat + 1) % len(self.active_players)
 
-    def set_next_player(self, from_player_idx=None, folded=False):
-        if self.all_players_called:
+    def set_next_player(self, from_player_idx=-1, folded=False):
+        if self.all_players_called():
             self.next_player_idx = None
             return
         
-        if from_player_idx == None:
+        if from_player_idx == -1:
             from_player_idx = self.next_player_idx
         
         if not folded:
@@ -122,7 +129,7 @@ class Table:
         return self.active_players[self.next_player_idx]
 
     def start_next_bet_round(self):
-        if not self.all_players_called:
+        if not self.all_players_called():
             raise Exception("Everyone must call first")
 
         self.last_bet_raise_delta = self.big_blind
@@ -183,7 +190,6 @@ class Table:
         for pot in self.pots:
             eligible_players = [p for p in pot.contributors if p.has_called]
 
-
             if len(eligible_players) == 0:
                 for p in pot.contributors:
                     p.stakes += pot.contributors[p]
@@ -210,30 +216,32 @@ class Table:
 
         return all_winners
 
-    def _split_pot(self, pot, partial_player):
+    def _split_pot(self, pot, partial_player, partial_player_bet):
         side_pot = Pot(highest_bet=pot.highest_bet)
         pot.highest_bet = partial_player.bet
-        delta_bet = side_pot.highest_bet - pot.highest_bet
+
+        new_highest_amount = pot.contributors[partial_player] + partial_player_bet
 
         for player in pot.contributors:
             if player.bet >= side_pot.highest_bet:
-                side_pot.increase_stakes(delta_bet, player, auto_set_highest_bet=False)
-                pot.stakes -= delta_bet
-                pot.contributors[player] -= delta_bet
+                delta = pot.contributors[player] - new_highest_amount
+                side_pot.increase_stakes(delta, player, auto_set_highest_bet=False)
+                pot.stakes -= delta
+                pot.contributors[player] -= delta
 
         self.pots.append(side_pot)
         self.pots = sorted(self.pots, key=lambda p: p.highest_bet)
 
+        pot.increase_stakes(partial_player_bet, partial_player)
+
         return side_pot
 
-    @property
     def all_players_called(self):
         for p in self.active_players:
             if not p.has_called:
                 return False
         return True
 
-    @property
     def pot_value(self):
         stakes = 0
         for pot in self.pots:

@@ -6,10 +6,10 @@ from gym_holdem.holdem import BetRound
 def test_split_pot():
     # Table 1
     t1 = Table(small_blind=10, big_blind=20)
-    t1.add_player(Player(100, t1))
-    t1.add_player(Player(100, t1))
-    t1.add_player(Player(100, t1))
-    t1.add_player(Player(50, t1))
+    t1.add_player(Player(100, t1, name="0"))
+    t1.add_player(Player(100, t1, name="1"))
+    t1.add_player(Player(100, t1, name="2"))
+    t1.add_player(Player(50, t1, name="3"))
 
     t1.new_round()
 
@@ -19,7 +19,7 @@ def test_split_pot():
     t1.next_player.call_check()
     t1.next_player.call_check()
 
-    assert len(t1.pots) == 2
+    #assert len(t1.pots) == 2
     assert t1.pots[0].highest_bet == 50
     assert t1.pots[0].stakes == 200
     assert t1.pots[1].highest_bet == 100
@@ -40,13 +40,34 @@ def test_split_pot():
     t2.next_player.call_check()
     t2.next_player.call_check()
 
-    assert len(t2.pots) == 3
+    #assert len(t2.pots) == 3
     assert t2.pots[0].highest_bet == 25
     assert t2.pots[0].stakes == 100
     assert t2.pots[1].highest_bet == 50
     assert t2.pots[1].stakes == 75
     assert t2.pots[2].highest_bet == 100
     assert t2.pots[2].stakes == 100
+
+    t3 = Table(small_blind=10, big_blind=20)
+    t3.add_player(Player(100, t3, name="0"))
+    t3.add_player(Player(10, t3, name="1"))
+    t3.add_player(Player(20, t3, name="2"))
+    t3.add_player(Player(100, t3, name="3"))
+
+    t3.new_round()
+
+    t3.next_player.call_check()
+    t3.next_player.raise_bet(40)
+    t3.next_player.raise_bet(80)
+    t3.next_player.call_check()
+
+    assert len(t3.pots) == 3
+    assert t3.pots[0].highest_bet == 10
+    assert t3.pots[0].stakes == 40
+    assert t3.pots[1].highest_bet == 20
+    assert t3.pots[1].stakes == 30
+    assert t3.pots[2].highest_bet == 100
+    assert t3.pots[2].stakes == 160
 
 
 def test_new_bet_round():
@@ -68,7 +89,7 @@ def test_new_bet_round():
     t.next_player.call_check()
     t.next_player.call_check()
     
-    assert t.all_players_called
+    assert t.all_players_called()
     assert t.bet_round == BetRound.PREFLOP
 
     t.start_next_bet_round()
@@ -83,7 +104,7 @@ def test_new_bet_round():
         t.next_player.call_check()
     
     assert t.bet_round == BetRound.FLOP
-    assert t.all_players_called
+    assert t.all_players_called()
 
     t.start_next_bet_round()
 
@@ -99,7 +120,7 @@ def test_new_bet_round():
     t.next_player.call_check()
 
     assert len(t.active_players) == 3
-    assert t.all_players_called
+    assert t.all_players_called()
     assert t.bet_round == BetRound.TURN
 
     t.start_next_bet_round()
@@ -113,7 +134,7 @@ def test_new_bet_round():
     for _ in range(3):
         t.next_player.call_check()
     
-    assert t.all_players_called
+    assert t.all_players_called()
     assert t.bet_round == BetRound.RIVER
 
     t.start_next_bet_round()
@@ -132,22 +153,22 @@ def test_all_players_have_called():
         t.add_player(Player(100, t))
     t.new_round()
 
-    assert not t.all_players_called
+    assert not t.all_players_called()
     t.next_player.call_check()
-    assert not t.all_players_called
+    assert not t.all_players_called()
     t.next_player.call_check()
-    assert not t.all_players_called
+    assert not t.all_players_called()
     t.next_player.call_check()
-    assert not t.all_players_called
+    assert not t.all_players_called()
     t.next_player.call_check()
-    assert t.all_players_called
+    assert t.all_players_called()
     t.start_next_bet_round()
-    assert not t.all_players_called
+    assert not t.all_players_called()
 
 def play_game_0():
     t = Table()
     for _ in range(4):
-        t.add(Player(100, table=t))
+        t.add_player(Player(100, table=t))
     
     t.new_round()
 

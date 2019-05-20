@@ -49,7 +49,7 @@ def test_player_actions():
     assert p.bet == 40
     assert p.stakes == 60
     assert t.current_pot.highest_bet == 40
-    assert t.current_pot.highest_amount == 40
+    assert t.current_pot.highest_amount() == 40
     assert p in t.current_pot.contributors
     for other_player in t.active_players:
         if other_player == p:
@@ -99,4 +99,4 @@ def test_player_actions():
 
     assert len(t.pots) == 1
     assert t.current_pot.highest_bet == 100
-    assert t.current_pot.highest_amount == 100
+    assert t.current_pot.highest_amount() == 100
